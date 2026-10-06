@@ -7,11 +7,10 @@ on:
         type: choice
         description: '清理的工作流名称'
         required: true
-        default: 'Build All OnePlus Kernels'
+        default: 'Build All OnePlus Kernels (paperSU)'
         options:
-          - Build All OnePlus Kernels
-          - CAll Build Start UP
-          - Build TEST
+          - Build All OnePlus Kernels (paperSU)
+              - Build TEST
           - Build TEST2
       cache_mode:
         type: choice

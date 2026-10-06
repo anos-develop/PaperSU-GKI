@@ -211,7 +211,7 @@ jobs:
                     # paperSU: the helper scripts, patches and ccache live in this repository now, so the
           # build no longer reaches into the upstream Action-Build repo at run time. The clone
           # target is named Action-Build on purpose: every later path expects that directory.
-          git clone https://github.com/anos-develop/PaperSU-GKI.git -b main Action-Build
+          git clone "${{ github.server_url }}/${{ github.repository }}.git" -b "${{ github.ref_name }}" Action-Build
 
       - name: Extract Manifest Info
         id: extract_info
@@ -728,7 +728,7 @@ jobs:
             sed -i "s|^KSU_VERSION_API := .*|KSU_VERSION_API := $ESC_KSU_VERSION_TAG|" kernel/Makefile
           fi
 
-                    # paperSU: pinned to 41010 to match the manager and the kernel module.
+          # paperSU: pinned to 41010 to match the manager and the kernel module.
           KSU_VERSION=41010
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
 
