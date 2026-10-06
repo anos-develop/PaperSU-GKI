@@ -709,8 +709,18 @@ jobs:
           ESC_VERSION_FULL=$(printf '%s' "$VERSION_FULL" | sed 's/[&|\\/]/\\&/g')
           ESC_KSU_VERSION_TAG=$(printf '%s' "$KSU_VERSION_TAG" | sed 's/[&|\\/]/\\&/g')
 
-          if grep -q '^KSU_VERSION_FULL := ' kernel/Makefile; then
-            sed -i "s|^KSU_VERSION_FULL := .*|KSU_VERSION_FULL := $ESC_VERSION_FULL|" kernel/Makefile
+          # paperSU: the version variables live in kernel/Kbuild in current SukiSU-derived
+          # trees and used to live in kernel/Makefile. Pick whichever actually carries them,
+          # so this keeps working either way.
+          KSU_MK="kernel/Kbuild"
+          if [ ! -f "$KSU_MK" ] || ! grep -q '^KSU_VERSION_FULL := ' "$KSU_MK"; then
+            if grep -q '^KSU_VERSION_FULL := ' kernel/Makefile 2>/dev/null; then
+              KSU_MK="kernel/Makefile"
+            fi
+          fi
+          echo "version file: $KSU_MK"
+          if grep -q '^KSU_VERSION_FULL := ' "$KSU_MK"; then
+            sed -i "s|^KSU_VERSION_FULL := .*|KSU_VERSION_FULL := $ESC_VERSION_FULL|" "$KSU_MK"
           else
             awk -v full="$VERSION_FULL" '
               /^REPO_OWNER :=/ && !done {
@@ -721,11 +731,11 @@ jobs:
                 next
               }
               { print }
-            ' kernel/Makefile > kernel/Makefile.tmp && mv kernel/Makefile.tmp kernel/Makefile
+            ' "$KSU_MK" > "$KSU_MK.tmp" && mv "$KSU_MK.tmp" "$KSU_MK"
           fi
 
-          if grep -q '^KSU_VERSION_API := ' kernel/Makefile; then
-            sed -i "s|^KSU_VERSION_API := .*|KSU_VERSION_API := $ESC_KSU_VERSION_TAG|" kernel/Makefile
+          if grep -q '^KSU_VERSION_API := ' "$KSU_MK"; then
+            sed -i "s|^KSU_VERSION_API := .*|KSU_VERSION_API := $ESC_KSU_VERSION_TAG|" "$KSU_MK"
           fi
 
           # paperSU: pinned to 41010 to match the manager and the kernel module.
@@ -733,7 +743,9 @@ jobs:
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
 
           echo "::group::最终 Makefile 中版本信息及部分调试结果预览"
-          grep -nE '^(REPO_OWNER|REPO_NAME|REPO_BRANCH|KSU_VERSION_API|KSU_VERSION_FULL|VERSION_TAG|GIT_BIN|CURL_BIN)' kernel/Makefile
+          # paperSU: a no-match grep exits 1 and used to abort the whole job even though
+          # nothing was actually wrong. Report what is there and carry on.
+          grep -nE '^(REPO_OWNER|REPO_NAME|REPO_BRANCH|KSU_VERSION_API|KSU_VERSION_FULL|VERSION_TAG|KSU_VERSION)' "$KSU_MK" || echo "(none of those keys present, which is fine)"
           echo "::endgroup::"
 
       - name: Fix missing kernel_umount_feature_set function
