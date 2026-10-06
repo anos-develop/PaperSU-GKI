@@ -1236,6 +1236,23 @@ jobs:
           echo "Disabling GPUEB for MTK kernel 5.10"
           sed -i '/obj-y.*gpueb/d' kernel_workspace/kernel-5.10/drivers/gpu/mediatek/Makefile
 
+      - name: paperSU signing identity
+        run: |
+          # paperSU: the kernel accepts TWO manager certificates.
+          #
+          #   EXPECTED_SIZE / EXPECTED_HASH    the upstream one, left as Kbuild defaults
+          #   EXPECTED_SIZE2 / EXPECTED_HASH2  ours, supplied here
+          #
+          # apk_sign.c tries the first and, when EXPECTED_SIZE2 is defined, the second, so
+          # both the upstream manager and ours are recognised. These are make variables, so
+          # exporting them is enough; Kbuild's ifndef picks them up.
+          #
+          # Values come from manager/key.jks: 877 byte certificate, digest below.
+          # Regenerate with papersu-signing.ps1 if the keystore is ever replaced.
+          echo "KSU_MANAGER_PACKAGE=top.becuy.eric.papersu" >> "$GITHUB_ENV"
+          echo "KSU_EXPECTED_SIZE2=0x036d" >> "$GITHUB_ENV"
+          echo "KSU_EXPECTED_HASH2=14ea1b98c9f693f282a05022b8cf02dcbd2dd8e28c9d6b97bd6acfda1352f82f" >> "$GITHUB_ENV"
+          echo "paperSU signing identity exported for the kernel build"
       - name: Build Kernel FAST
         if: ${{ github.event.inputs.FAST_BUILD == 'true' }}
         id: fast_build
