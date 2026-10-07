@@ -703,7 +703,7 @@ jobs:
           fi
           # paperSU: the full version is pinned so the module, the manager and the release
           # all report the same string. The commit hash is kept in the log, not the version.
-          VERSION_FULL="41010-1"
+          VERSION_FULL="v41010-PaperSU"
           echo "paperSU pinned version: $VERSION_FULL (upstream tag $KSU_VERSION_TAG, hash $USE_HASH)"
 
           ESC_VERSION_FULL=$(printf '%s' "$VERSION_FULL" | sed 's/[&|\\/]/\\&/g')
