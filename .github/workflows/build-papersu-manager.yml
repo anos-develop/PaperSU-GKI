@@ -1,0 +1,41 @@
+name: Build PaperSU Manager
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-papersu-manager.yml"
+jobs:
+  build:
+    name: Build PaperSU Manager
+    runs-on: macos-26
+    steps:
+      - name: Check out PaperSU-Magisk
+        uses: actions/checkout@v6
+        with:
+          repository: anos-develop/Magisk
+          ref: master
+          submodules: recursive
+          fetch-depth: 1
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          is-asset-build: true
+      - name: Build release
+        run: ./build.py -vr all
+      - name: Stop gradle daemon
+        run: ./app/gradlew --stop
+        if: always()
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: papersu-manager
+          compression-level: 9
+          path: |
+            out
+            native/out/arm64-v8a/magisk
+            native/out/arm64-v8a/magiskinit
+            native/out/arm64-v8a/magiskboot
+            native/out/arm64-v8a/magiskpolicy
+            native/out/arm64-v8a/busybox
+            native/out/arm64-v8a/init-ld
