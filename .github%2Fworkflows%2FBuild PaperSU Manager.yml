@@ -1,0 +1,54 @@
+# paperSU: 编译改造后的管理器（anos-develop/Magisk 的 app 模块）。
+#
+# 为什么放在这个仓库而不是 Magisk 那个 fork：
+#   Magisk fork 的 Actions 一直被 GitHub 以 422 拒绝 dispatch，配额清空 + 重新启用
+#   也没用。这个仓库的 Actions 是正常的（GKI 内核那套就在这跑），所以借它来编。
+#
+# 产物：改造后的纸SU 管理器 APK + arm64 的 6 个原生件。
+name: Build PaperSU Manager
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/Build PaperSU Manager.yml"
+
+jobs:
+  build:
+    name: Build PaperSU Manager
+    runs-on: macos-26
+    steps:
+      - name: Check out PaperSU-Magisk
+        uses: actions/checkout@v6
+        with:
+          repository: anos-develop/Magisk
+          ref: master
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          is-asset-build: true
+
+      - name: Build release
+        run: ./build.py -vr all
+
+      - name: Stop gradle daemon
+        run: ./app/gradlew --stop
+        if: always()
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: papersu-manager
+          compression-level: 9
+          path: |
+            out
+            native/out/arm64-v8a/magisk
+            native/out/arm64-v8a/magiskinit
+            native/out/arm64-v8a/magiskboot
+            native/out/arm64-v8a/magiskpolicy
+            native/out/arm64-v8a/busybox
+            native/out/arm64-v8a/init-ld
